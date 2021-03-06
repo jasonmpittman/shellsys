@@ -1,11 +1,9 @@
 
 from configparser import ConfigParser
-import os, syslog, time
+import os, syslog, datetime, time
 
 class Shellsys:
     """ """
-
-    __last_line = None
 
     def __init__(self):
         self.__config = ConfigParser()
@@ -30,42 +28,17 @@ class Shellsys:
     def readHistory(self, dir, file):
         """ """
         history = dir + '/' + file
+        with open(history, "r") as history_handle:
+            history_handle.seek(0, 2)
+            while True:
+                line = history_handle.readline()
+                if not line:
+                    time.sleep(0.5)
+                    continue
+                print(line.strip('\n')) # this yields #1615052581\nls\n
 
-        if self.__last_line is None:
-            with open(history, 'r') as history_data:        
-                self.__setLastLine(history)
-                print(history_data.read())
-        else:
-            with open(history, 'r') as history_data:
-                for line in history_data:
-                    if line.strip() == self.__last_line:
-                        break
-                
-                for line in history_data:
-                    print(line)
-
-
-
-    def getLastLine(self, file):
-        """returns the last line of the passed file"""
-        pass
-
-
-    def __setLastLine(self, file):
-        """ """
-        with open(file, 'r') as file_handle:
-            self.__last_line = file_handle.readlines()[-1]
-            
-    # this is no longer necessary
-    def __isFileChanged(self, file, modified_time):
-        """utility method to check if modified time of indicated file has changed"""
-        
-        new_time = time.ctime(os.path.getmtime(file))
-        print(new_time + "\t" + modified_time)
-        if new_time != modified_time:
-            return True
-        else:
-            return False
+    def convertEpochTime(self, timestamp):
+        return datetime.datetime.fromtimestamp(timestamp).strftime('%c')
 
 
 s = Shellsys()
@@ -74,8 +47,5 @@ shell = s.getShell()
 dir = s.getHistoryDir()
 file = s.getHistoryFile()
 
-try:
-    while True:
-        s.readHistory(dir, file)
-except KeyboardInterrupt:
-    pass
+s.readHistory(dir, file)
+
